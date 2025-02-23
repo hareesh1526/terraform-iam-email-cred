@@ -1,0 +1,82 @@
+# ✅ cloud provider
+provider "aws" {
+  region = "us-east-1"
+}
+
+# ✅ Verify Email in AWS SES
+resource "aws_ses_email_identity" "email" {
+  email = "abc@gmail.com"
+}
+
+
+# ✅ Create IAM User
+resource "aws_iam_user" "user" {
+  name = "servicenow-user"
+  tags = {
+    request_id = "request-ID"
+    requester  = "abc@gmail.com"
+  }
+}
+
+# ✅ Attach Correct S3 Read-Only Policy
+resource "aws_iam_user_policy_attachment" "s3_read_access" {
+  user       = aws_iam_user.user.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+
+  depends_on = [aws_iam_user.user]
+}
+
+# ✅ Generate IAM User Access & Secret Keys
+resource "aws_iam_access_key" "user_key" {
+  user = aws_iam_user.user.name
+}
+
+# ✅ Store IAM Credentials in a Local File
+resource "local_file" "creds" {
+  filename = "creds.json"
+  content  = <<EOT
+{
+  "Requester Email": "<abc@gmail.com>",
+  "Request ID": "<Requester-ID>",
+  "IAM User ARN": "${aws_iam_user.user.arn}",
+  "Access Key": "${aws_iam_access_key.user_key.id}",
+  "Secret Key": "${aws_iam_access_key.user_key.secret}"
+}
+EOT
+}
+
+# ✅ Verify Email in AWS SES
+# ✅ Create an email JSON file using Terraform
+resource "local_file" "email_json" {
+  filename = "email.json"
+  content  = <<EOT
+{
+  "Source": "abc@gmail.com",
+  "Destination": {
+    "ToAddresses": ["abc@gmail.com"]
+  },
+  "Message": {
+    "Subject": {
+      "Data": "IAM Credentials for Request request-id"
+    },
+    "Body": {
+      "Text": {
+        "Data": "Requester: abc@gmail.com\nRequest ID: <request-id>\nIAM User ARN: ${aws_iam_user.user.arn}\nAccess Key: ${aws_iam_access_key.user_key.id}\nSecret Key: ${aws_iam_access_key.user_key.secret}"
+      }
+    }
+  }
+}
+EOT
+}
+
+# ✅ Execute the AWS SES send-email command
+resource "null_resource" "send_email" {
+  provisioner "local-exec" {
+  command = "aws ses send-email --cli-input-json file://email.json --region us-east-1"
+    }
+  depends_on = [
+    local_file.email_json,    # Ensure the JSON file is created first
+    aws_iam_access_key.user_key,
+    aws_ses_email_identity.email
+  ]
+}
