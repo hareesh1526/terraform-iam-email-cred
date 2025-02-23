@@ -24,20 +24,32 @@ Save the keys in a file (e.g., creds.json).
 6. Send Email with Credentials
 Use AWS SES or a local SMTP server to send credentials via email.
 
--------------------------------------------------------------------------------------------
-How It Works:
-Creates an IAM User (servicenow-user)
-Assigns an S3 Read-Only Policy
-Generates IAM Access & Secret Key
-Stores the credentials securely in AWS Secrets Manager
-Sends an email notification via AWS SES
-The email contains retrieval instructions (NOT credentials)
-The requester can securely fetch credentials using AWS CLI
-----------------------------------------------------------------------------------------------------------------
-Benefits:
-✅ No plaintext credentials sent via email
-✅ Secrets are stored securely in AWS Secrets Manager
-✅ Requester retrieves credentials securely via AWS CLI
-✅ Automatic email notification to requester
+--------------------------------------------------------------------------------------------------------------
 
-Would you like me to add a IAM policy to restrict secret access to specific users
+How It Works:
+
+Creates an IAM User (servicenow-user)
+
+Assigns an S3 Read-Only Policy
+
+Generates IAM Access & Secret Key
+
+Stores the credentials securely in AWS Secrets Manager
+
+Sends an email notification via AWS SES
+
+The email contains retrieval instructions (NOT credentials)
+
+The requester can securely fetch credentials using AWS CLI
+
+----------------------------------------------------------------------------------------------------------------
+
+Benefits:
+
+1.No plaintext credentials sent via email
+
+2.Secrets are stored securely in AWS Secrets Manager
+
+3.Requester retrieves credentials securely via AWS CLI
+
+4.Automatic email notification to requester
